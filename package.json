@@ -1,21 +1,46 @@
 {
   "name": "magicart-paint",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "MagicArt Paint Application",
+  "author": "Quang Ho",
+  "main": "electron.js",
+  "homepage": "./",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"npm run dev\" \"electron .\"",
+    "electron:build": "npm run build && electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.magicart.app",
+    "productName": "MagicArt Paint",
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.png"
+    },
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.js",
+      "package.json"
+    ]
   },
   "dependencies": {
+    "lucide-react": "^0.562.0",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "lucide-react": "^0.562.0"
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.1.2",
+    "electron": "^34.2.0",
+    "electron-builder": "^26.4.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

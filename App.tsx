@@ -8,7 +8,7 @@ import {
 import { TOOLS, TIER_CONFIG, INITIAL_PALETTE } from './constants';
 import { ToolType, VipTier, Layer, Palette, User } from './types';
 import { ColorWheel } from './components/ColorWheel';
-import { CanvasBoard } from './components/CanvasBoard';
+import { CanvasBoard, CanvasBoardHandle } from './components/CanvasBoard';
 import { VipModal } from './components/VipModal';
 import { AdminModal } from './components/AdminModal';
 import { AuthModal } from './components/AuthModal';
@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [uiScale, setUiScale] = useState(1);
   const [isAutoResize, setIsAutoResize] = useState(false); // Default false, enable via Admin
   const appContainerRef = useRef<HTMLDivElement>(null);
+  const canvasBoardRef = useRef<CanvasBoardHandle>(null); // Ref to access CanvasBoard methods
 
   useEffect(() => {
     const handleResize = () => {
@@ -255,6 +256,20 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveImage = () => {
+    if (canvasBoardRef.current) {
+      const dataUrl = canvasBoardRef.current.exportImage();
+      if (dataUrl) {
+        const link = document.createElement('a');
+        link.download = `MagicArt_Artwork_${Date.now()}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  };
+
   const toggleLayerVis = (id: string) => {
     setLayers(layers.map(l => l.id === id ? { ...l, visible: !l.visible } : l));
   };
@@ -333,7 +348,18 @@ const App: React.FC = () => {
         <header className="h-7 bg-[#2d2d2d] border-b border-black flex items-center px-2 text-xs gap-4 shrink-0">
           <span className="text-lg magic-text mr-2">MagicArt Paint</span>
           <div className="flex gap-3 text-gray-400 items-center">
-             <span className="hover:text-white cursor-pointer">Tệp (File)</span>
+             <div className="hover:text-white cursor-pointer group relative">
+                <span>Tệp (File)</span>
+                <div className="absolute top-full left-0 bg-[#2d2d2d] border border-black p-2 hidden group-hover:block z-50 w-40 shadow-xl">
+                   <button 
+                    onClick={handleSaveImage}
+                    className="flex items-center gap-2 w-full text-left hover:bg-gray-700 p-1 rounded text-white"
+                   >
+                     <Download size={14} className="text-blue-400"/>
+                     <span>Lưu ảnh (Save)</span>
+                   </button>
+                </div>
+             </div>
              <span className="hover:text-white cursor-pointer">Chỉnh sửa</span>
              <span className="hover:text-white cursor-pointer">Vùng vẽ</span>
              <span className="hover:text-white cursor-pointer">Lớp (Layer)</span>
@@ -362,6 +388,15 @@ const App: React.FC = () => {
              )}
           </div>
           <div className="ml-auto flex items-center gap-3">
+             <button 
+                onClick={handleSaveImage} 
+                className="p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-white flex items-center gap-1 border border-gray-700"
+                title="Lưu ảnh về máy"
+             >
+                <Download size={14} />
+                <span className="text-[10px] hidden sm:inline">Lưu</span>
+             </button>
+
              {currentUser && (
                <div className="flex items-center gap-2 mr-2 border-r border-gray-600 pr-3">
                   <span className="text-gray-400">Hi, <span className="text-white font-bold">{currentUser.username}</span></span>
@@ -514,6 +549,7 @@ const App: React.FC = () => {
              
              <div className="flex-1 relative overflow-hidden bg-gray-500">
                 <CanvasBoard 
+                    ref={canvasBoardRef}
                     tool={activeTool} 
                     color={activeColor}
                     brushSize={brushSize}

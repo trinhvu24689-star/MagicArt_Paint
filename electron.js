@@ -1,30 +1,36 @@
-const { app, BrowserWindow, Menu } = require('electron');
-const path = require('path');
+import { app, BrowserWindow } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Tái tạo __dirname trong môi trường ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function createWindow() {
   // 1. Tạo cửa sổ trình duyệt
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
-    icon: path.join(__dirname, 'public/icon.png'), // Bạn cần để file icon.png vào thư mục public
+    icon: path.join(__dirname, 'public/icon.png'), // Đảm bảo bạn có file icon trong public
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      webSecurity: false // Cho phép load local resource nếu cần
     },
-    autoHideMenuBar: true, // Ẩn thanh menu mặc định của Windows
-    frame: true, // Giữ khung viền Window chuẩn
+    autoHideMenuBar: true, // Ẩn thanh menu
+    frame: true, // Hiện khung viền window
+    backgroundColor: '#1e1e1e'
   });
 
   // 2. Load ứng dụng
-  // Trong môi trường Dev: Load localhost
-  // Trong môi trường Prod (khi build ra exe): Load file index.html
   const isDev = !app.isPackaged;
   
   if (isDev) {
-    win.loadURL('http://localhost:3000'); // Port mặc định của Vite/React
-    win.webContents.openDevTools(); // Mở bảng debug khi đang code
+    // Vite mặc định chạy ở port 5173 (không phải 3000)
+    win.loadURL('http://localhost:5173'); 
+    win.webContents.openDevTools(); // Mở DevTools khi code
   } else {
-    // Khi build xong, nó sẽ load file từ thư mục dist
+    // Khi build xong, load file từ thư mục dist
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   }
 }

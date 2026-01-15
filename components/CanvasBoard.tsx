@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { ToolType, RGB } from '../types';
 
 interface CanvasBoardProps {
@@ -10,19 +10,38 @@ interface CanvasBoardProps {
   locked?: boolean;
 }
 
-export const CanvasBoard: React.FC<CanvasBoardProps> = ({ 
+export interface CanvasBoardHandle {
+  exportImage: () => string | null;
+}
+
+export const CanvasBoard = forwardRef<CanvasBoardHandle, CanvasBoardProps>(({ 
   tool, color, brushSize, opacity, showGrid, locked = false 
-}) => {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gridRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const lastPos = useRef<{ x: number, y: number } | null>(null);
+
+  // Expose methods to parent
+  useImperativeHandle(ref, () => ({
+    exportImage: () => {
+      if (canvasRef.current) {
+        // Return the data URL of the drawing canvas (ignores the grid canvas)
+        return canvasRef.current.toDataURL('image/png');
+      }
+      return null;
+    }
+  }));
 
   // Initialize and resize
   useEffect(() => {
     const handleResize = () => {
       const parent = canvasRef.current?.parentElement;
       if (parent && canvasRef.current && gridRef.current) {
+        // Save current content before resizing (optional, but good for UX)
+        // For now, simple resize resets canvas as per original logic, 
+        // in a real app you'd copy the image data.
+        
         // Set canvas size to match parent exactly
         canvasRef.current.width = parent.clientWidth;
         canvasRef.current.height = parent.clientHeight;
@@ -173,4 +192,6 @@ export const CanvasBoard: React.FC<CanvasBoardProps> = ({
       />
     </div>
   );
-};
+});
+
+CanvasBoard.displayName = "CanvasBoard";
